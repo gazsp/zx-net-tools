@@ -6,6 +6,7 @@ all:
 	@echo "make plus3dos - to make +3/+3e version Spectrum 128 with ESP-12 on AY"
 	@echo "make esxdos - to make esxDOS version Spectrum 128 with ESP-12 on AY"
 	@echo "make spectranet - to make Spectranet version"
+	@echo "make prtwifi - to make +3 PRTWIFI version"
 
 spectranet: *.asm font.bin
 	sjasmplus -DSPECTRANET main.asm
@@ -29,6 +30,9 @@ plus3dos: *.asm font.bin
 	specform -a 24100 ugoph.bin
 	rm ugoph.bin
 	mv ugoph.bin.zxb ugoph.bin
+
+prtwifi: *.asm font.bin
+	sjasmplus -DPLUS3DOS -DPRTWIFI main.asm
 
 esxdos: *.asm font.bin
 	sjasmplus -DESXDOS -DAY main.asm

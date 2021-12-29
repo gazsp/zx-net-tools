@@ -88,6 +88,11 @@ wsLp  halt : djnz wsLp
     include "wifi.asm"
     include "ay-uart.asm"
     ENDIF
+
+    IFDEF PRTWIFI
+    include "wifi.asm"
+    include "prtwifi.asm"
+    ENDIF
     
     IFDEF UNO
     include "uno-uart.asm"
