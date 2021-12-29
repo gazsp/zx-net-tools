@@ -1,9 +1,12 @@
-CURKEY = 23560
+LASTK = 23560
 
 ; Returns in A key code or zero if key wans't pressed
 inkey:
-    ld hl, CURKEY : ld a, (hl)
-    push af : xor a : ld (hl), a : pop af
+    ld   a, (LASTK)
+    ld   b, a
+    xor  a
+    ld   (LASTK), a
+    ld   a, b
     ret
 
 findZero:
