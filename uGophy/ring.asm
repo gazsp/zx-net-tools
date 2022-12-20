@@ -22,9 +22,9 @@ ringL
 ; A - 0 NOT Found 
 ;     1 Found
 searchRing:
-    ld   b, 0
-
     push hl
+
+    ld   b, 0
     ld   de, ring_buffer + 32           ; Start at end of buffer
 strlen:
     ld   a, (hl)                        ; Get the length of the string to compare
@@ -33,10 +33,13 @@ strlen:
     inc  b
     and  a
     jp   nz, strlen
+
     dec  b                              ; Don't count 0 string terminator
+    inc  de
+
     pop  hl
 
-strcmp:
+strcmp:                                 ; B = strlen (without 0 terminator)
     ld   a, (de)
     cp   (hl)
     jp   nz, .failed
@@ -51,7 +54,12 @@ strcmp:
     ret
 
 clearRing:
-    xor a : ld hl, ring_buffer : ld de, ring_buffer + 1 : ld bc, 32 : ld (hl), a : ldir
+    xor a
+    ld hl, ring_buffer
+    ld de, ring_buffer + 1
+    ld bc, 32
+    ld (hl), a
+    ldir
     ret
 
 ring_buffer dup 33
