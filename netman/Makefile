@@ -17,6 +17,9 @@ zxuno3e: *.asm font.bin
 
 esxdos: *.asm font.bin
 	sjasmplus -DESXDOS -DAY main.asm
+
+prtwifi:
+	sjasmplus -DPLUS3DOS -DPRTWIFI main.asm
 	
 plus3dos:	
 	sjasmplus -DPLUS3DOS -DAY main.asm

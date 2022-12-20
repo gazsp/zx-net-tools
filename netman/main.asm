@@ -218,6 +218,10 @@ getNetwork db 13, 10, "AT+CWLAP", 13, 10, 0
     include "ay-uart.asm"
     ENDIF
 
+    IFDEF PRTWIFI
+    include "../uGophy/prtwifi.asm"
+    ENDIF
+
     IFDEF UNO
     include "uno-uart.asm"
     ENDIF
