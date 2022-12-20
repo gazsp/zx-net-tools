@@ -130,6 +130,6 @@ player
     ENDIF
 eop equ $
     SAVEBIN "ugoph.bin", Start, $ - Start
-    
+    SAVE3DOS "ugophp3.bin", Start, $ - Start
     SAVETAP "ugoph.tap", Start
     

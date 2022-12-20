@@ -1,20 +1,25 @@
 showPage:
     xor a : ld (show_offset), a, (s_half), a
-    inc a :ld (cursor_pos), a
+    inc a : ld (cursor_pos), a
+
 backToPage:    
     IFNDEF ZX48
     xor a : call changeBank
     ENDIF
     call renderScreen : call showCursor
+
 showLp:
     IFNDEF ZX48
     xor a : call changeBank
     ENDIF
+
 controls:
     xor a : ld (s_show_flag), a
 
-    call inkey 
-    cp 0   : jr z, showLp 
+1:  call inkey
+    or   a
+    jp   z, 1B
+
     cp 'q' : jp z, pageCursorUp
     cp 'a' : jp z, pageCursorDown
     cp 13  : jp z, selectItem 
@@ -22,6 +27,7 @@ controls:
     cp 'o' : jp z, pageScrollUp
     cp 'p' : jp z, pageScrollDn
     cp 'n' : jp z, openURI
+    cp 'r' : jp z, reloadPage
     cp ' ' : jp z, toggleHalf
     
     jp showLp
@@ -107,8 +113,8 @@ downPg:
 
 downFl:
     call extractInfo : call clearRing : call cleanIBuff
-
     ld hl, file_buffer : call findFnme : jp isOpenable
+
 dfl:
     IFDEF SPECTRANET
     jp backToPage
@@ -163,6 +169,7 @@ checkFile:
     ld hl, pt2Ext  : call searchRing : cp 1 : jr z, playMusic
     ENDIF
 	jp dfl
+
 loadImage:
 	ld hl, server_buffer : ld de, file_buffer : ld bc, port_buffer : call makeRequest
 	
@@ -346,8 +353,15 @@ renderScreen:
     ld b, 20
 renderLp:
     push bc
-    ld a, 20 : sub b : ld b, a : ld a, (show_offset) : add b : ld b, a 
+
+    ld   a, 20
+    sub  b
+    ld   b, a
+    ld   a, (show_offset)
+    add  b
+    ld   b, a
     call renderLine
+
     pop bc
     djnz renderLp
     ret
@@ -386,7 +400,12 @@ fndEnd:
     ld hl, 0 : ret
 
 extractInfo:
-    ld a, (cursor_pos) : dec a : ld b, a : ld a, (show_offset) : add b : ld b, a
+    ld   a, (cursor_pos)
+    dec  a
+    ld   b, a
+    ld   a, (show_offset)
+    add  b
+    ld   b, a
 
     call findLine
 
@@ -432,25 +451,25 @@ offset_tmp      dw  0
 show_offset     db  0
 cursor_pos      db  1
     IFNDEF ZX48
-head      db " UGophy - ZX-128 Gopher client v. 1.0  (c) Alexander Sharikhin ", 13,0
+head      db "UGophy - ZX-128 Gopher client v1.0 - (c) Alexander Sharikhin ", 13,0
     ELSE
-head      db " UGophy - ZX-48 Gopher client v. 1.0   (c) Alexander Sharikhin ", 13,0
+head      db "UGophy - ZX-48 Gopher client v1.0 - (c) Alexander Sharikhin ", 13,0
 
     ENDIF
 cleanLine db "                                                                ",0
-playing   db "Playing... Hold <SPACE> to stop!", 0
+playing   db "Playing. Hold <SPACE> to stop.", 0
 type_inpt db "User input: ", 0
 type_text db "Text file: ", 0
 type_info db "Information ", 0
 type_page db "Page: ", 0
-type_down db "File to download: ", 0
+type_down db "Download: ", 0
 type_unkn db "Unknown type ", 0 
 
     display $
 
-file_buffer defs 255     ; URI path
-server_buffer defs 70   ; Host name
-port_buffer defs 7      ; Port
+file_buffer   defs 255     ; URI path
+server_buffer defs 70      ; Host name
+port_buffer   defs 7       ; Port
 
 end_inf_buff equ $
 

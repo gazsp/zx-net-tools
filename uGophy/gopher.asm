@@ -170,10 +170,13 @@ openURI:
 
     ld hl, iBuff : ld de, d_host : ld bc, 65 : ldir
 
-    ld hl, d_host : ld de, d_path : ld bc, d_port : call openPage
-    
-    jp showPage
-    
+reloadPage:
+    ld   a, (d_host)
+    or   a
+    jp   z, backToPage
+
+    ld   hl, d_host : ld de, d_path : ld bc, d_port : call openPage
+    jp   showPage
 
 data_pointer    defw #4000
 data_recv       defw 0
@@ -197,6 +200,5 @@ d_port    db '70'
 
 hist            ds 322
 connectionOpen  db 0
-downloading_msg db 'Downloading...', 0
-
-connectionError db "Issue with making request - trying get back", 0
+downloading_msg db "Downloading...", 0
+connectionError db "Error making request. Trying to go back...", 0
