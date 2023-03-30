@@ -4,23 +4,26 @@ pushRing
     ld   b, 32
 
     ; Copy bytes in buffer down one position
+
     ld   hl, ring_buffer + 1
     ld   de, ring_buffer
-ringL
+1:
     ld   a, (hl)
     ld   (de), a
     inc  hl
     inc  de
-    djnz ringL
+    djnz 1B
 
     ld   a, c                           ; Get byte back from C
     ld   hl, ring_buffer + 31           ; Write byte to end of buffer
     ld   (hl), a
     ret
 
-; HL - Compare string(null terminated)
-; A - 0 NOT Found 
-;     1 Found
+; Entry:
+;   HL: Search string (null terminated)
+; Exit:
+;   Fc: 1 Found
+;       0 Not found
 searchRing:
     push hl
 
@@ -46,22 +49,21 @@ strcmp:                                 ; B = strlen (without 0 terminator)
     inc  de
     inc  hl
     djnz strcmp
-
-    ld   a, 1
+    scf
     ret
+
 .failed
     xor  a
     ret
 
 clearRing:
-    xor a
-    ld hl, ring_buffer
-    ld de, ring_buffer + 1
-    ld bc, 32
-    ld (hl), a
+    xor  a
+    ld   hl, ring_buffer
+    ld   de, ring_buffer + 1
+    ld   bc, 32
+    ld   (hl), a
     ldir
     ret
 
-ring_buffer dup 33
-            defb 0
-            edup
+ring_buffer
+    ds  32, 0

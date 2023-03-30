@@ -14,7 +14,7 @@ wlp:
 rstLp:
     call uartReadBlocking : call pushRing
 
-    ld hl, response_rdy : call searchRing : cp 1 : jr nz, rstLp     
+    ld hl, response_rdy : call searchRing : jr nc, rstLp
 
 ; WiFi client mode
     ld hl, cmd_mode : call okErrCmd : and 1 : jr z, errInit
@@ -51,16 +51,16 @@ okErrCmd:
 okErrCmdLp:
     call uartReadBlocking : call pushRing
     
-    ld hl, response_ok   : call searchRing : cp 1 : jr z, okErrOk
-    ld hl, response_err  : call searchRing : cp 1 : jr z, okErrErr
-    ld hl, response_fail : call searchRing : cp 1 : jr z, okErrErr
+    ld hl, response_ok   : call searchRing : jr c, okErrOk
+    ld hl, response_err  : call searchRing : jr c, okErrErr
+    ld hl, response_fail : call searchRing : jr c, okErrErr
     
     jp okErrCmdLp
 okErrOk
     ld a, 1
     ret
 okErrErr
-    ld a, 0
+    xor a
     ret
 
 ; Gets packet from network
@@ -71,10 +71,10 @@ okErrErr
 getPacket
 	call uartReadBlocking : call pushRing
 
-	ld hl, closed : call searchRing : cp 1 : jp z, closed_callback
-	ld hl, ipd : call searchRing : cp 1 : jr nz, getPacket
+	ld hl, closed : call searchRing : jp c, closed_callback
+	ld hl, ipd : call searchRing : jp nc, getPacket
 
-	call count_ipd_lenght : ld (bytes_avail), hl 
+	call count_ipd_length : ld (bytes_avail), hl
     push hl : pop bc
     
     ld hl, output_buffer
@@ -92,12 +92,19 @@ readp:
     ld hl, (bytes_avail)
 	ret
 
-count_ipd_lenght
-		ld hl,0			; count lenght
-cil1	push hl : call uartReadBlocking : push af : call pushRing : pop af : pop hl
-		cp      ':' : ret z
-		sub 0x30 : ld c,l : ld b,h : add hl,hl : add hl,hl : add hl,bc : add hl,hl : ld c,a : ld b,0 : add hl,bc
-		jr      cil1
+count_ipd_length
+	ld   hl, 0			; count length
+1:  push hl
+    call uartReadBlocking
+    push af
+    call pushRing
+    pop  af
+    pop  hl
+	cp   ':'
+    ret  z
+
+    call atoi2
+    jr   1B
 
 ; HL - z-string to hostname or ip
 ; DE - z-string to port
@@ -120,7 +127,7 @@ sendByte:
     cp 1 : jr nz, sbErr
 sbLp
     call uartReadBlocking 
-    ld hl, send_prompt : call searchRing : cp 1 : jr nz, sbLp
+    ld hl, send_prompt : call searchRing : jr nc, sbLp
     pop af
 
     ld (sbyte_buff), a : call okErrCmd

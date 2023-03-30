@@ -66,7 +66,7 @@ makeRequest:
     cp 1 : jp nz, reqErr 
 wPrmt:
     call uartReadBlocking : call pushRing
-    ld hl, send_prompt : call searchRing : cp 1 : jr nz, wPrmt
+    ld hl, send_prompt : call searchRing : jr nc, wPrmt
     
     ld hl, (path_ptr) : call uartWriteStringZ
     

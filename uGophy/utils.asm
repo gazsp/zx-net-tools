@@ -115,36 +115,34 @@ SkipWhitespace:
 ; DE <= StringZ
 ; HL => output
 atoi:	
-    ld hl, 0
-.loop    
-        ld a, (de)
+    ld   hl, 0
+1:  ld   a, (de)
+	and  a  : ret z
+    cp   13 : ret z
+    cp   9  : ret z
+    call atoi2
+    inc  de
+    jr 1B
 
-		and a : ret z
-        cp 13 : ret z
-        cp 9  : ret z
-        
-		sub     0x30
-		ld      c,l
-		ld      b,h
-		add     hl,hl
-		add     hl,hl
-		add     hl,bc
-		add     hl,hl
-		ld      c,a
-		ld      b,0
-		add     hl,bc
-
-        inc de
-		
-        jr      .loop
+atoi2:
+    sub  0x30
+    ld   c, l
+    ld   b, h
+    add  hl, hl
+    add  hl, hl
+    add  hl, bc
+    add  hl, hl
+    ld   c, a
+    ld   b, 0
+    add  hl, bc
+    ret
 
 findEnd:
-    ld a,(hl)
-
-    and a : ret z
-    
-    inc hl
-    jr findEnd
+    ld   a, (hl)
+    and  a
+    ret  z
+    inc  hl
+    jr   findEnd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 

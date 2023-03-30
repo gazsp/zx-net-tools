@@ -16,10 +16,9 @@ findZero:
 
 input:
     ld b, 20 : ld c, 0 : call gotoXY
-
     ld hl, cleanLine : call printZ64
-    
     ld hl, iBuff : call findZero
+
 iLp:
     halt
     push hl
@@ -53,7 +52,7 @@ iCr  pop hl  : xor a : ld (hl), a : push hl
 iNth pop hl: jr iLp
 
 cleanIBuff:
-    ld bc, 64 : ld hl, iBuff : ld de, iBuff + 1 : ld (hl), 0 : ldir
+    xor a : ld bc, 64 : ld hl, iBuff : ld de, iBuff + 1 : ld (hl), a : ldir
     ret
 
 iRet:

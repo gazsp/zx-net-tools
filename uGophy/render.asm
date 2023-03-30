@@ -16,19 +16,25 @@ showLp:
 controls:
     xor a : ld (s_show_flag), a
 
-1:  call inkey
+1:  halt
+    call inkey
     or   a
     jp   z, 1B
 
     cp 'q' : jp z, pageCursorUp
+    cp 11  : jp z, pageCursorUp
     cp 'a' : jp z, pageCursorDown
+    cp 10  : jp z, pageCursorDown
     cp 13  : jp z, selectItem 
+    cp ' ' : jp z, selectItem
+    cp 't' : jp z, toggleHalf
     cp 'b' : jp z, historyBack
     cp 'o' : jp z, pageScrollUp
+    cp 8   : jp z, pageScrollUp
     cp 'p' : jp z, pageScrollDn
+    cp 9   : jp z, pageScrollDn
     cp 'n' : jp z, openURI
     cp 'r' : jp z, reloadPage
-    cp ' ' : jp z, toggleHalf
     
     jp showLp
 
@@ -154,19 +160,20 @@ pt2Ext2 db ".PT2", 0
 
 checkFile:
 ;; Images
-	ld hl, imgExt  : call searchRing : cp 1 : jr z, loadImage
-	ld hl, imgExt2 : call searchRing : cp 1 : jr z, loadImage
+	ld hl, imgExt  : call searchRing : jr c, loadImage
+	ld hl, imgExt2 : call searchRing : jr c, loadImage
+
     IFNDEF ZX48
 ;; Music
     xor a: ld (#400A), a
 
-    ld hl, pt3Ext  : call searchRing : cp 1 : jr z, playMusic
-    ld hl, pt3Ext2 : call searchRing : cp 1 : jr z, playMusic
+    ld hl, pt3Ext  : call searchRing : jr c, playMusic
+    ld hl, pt3Ext2 : call searchRing : jr c, playMusic
 
     ld a, 2 : ld (#400A), a
 
-    ld hl, pt2Ext2 : call searchRing : cp 1 : jr z, playMusic
-    ld hl, pt2Ext  : call searchRing : cp 1 : jr z, playMusic
+    ld hl, pt2Ext2 : call searchRing : jr c, playMusic
+    ld hl, pt2Ext  : call searchRing : jr c, playMusic
     ENDIF
 	jp dfl
 
@@ -451,9 +458,10 @@ offset_tmp      dw  0
 show_offset     db  0
 cursor_pos      db  1
     IFNDEF ZX48
-head      db "UGophy - ZX-128 Gopher client v1.0 - (c) Alexander Sharikhin ", 13,0
+          ;   |--------------------------------------------------------------|
+head      db "UGophy - ZX-128 Gopher client v1.0 - (c) Alexander Sharikhin    ", 0
     ELSE
-head      db "UGophy - ZX-48 Gopher client v1.0 - (c) Alexander Sharikhin ", 13,0
+head      db "UGophy - ZX-48 Gopher client v1.0 - (c) Alexander Sharikhin     ", 0
 
     ENDIF
 cleanLine db "                                                                ",0
