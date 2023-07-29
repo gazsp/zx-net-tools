@@ -14,8 +14,11 @@ wlp:
 rstLp:
     call uartReadBlocking : call pushRing
 
+    ; Old firmware returns 'invalid'
+    ld hl, response_invalid : call searchRing : jr c, 1F
     ld hl, response_rdy : call searchRing : jr nc, rstLp
 
+1:
 ; WiFi client mode
     ld hl, cmd_mode : call okErrCmd : and 1 : jr z, errInit
 ; Disable ECHO. BTW Basic UART test
@@ -69,28 +72,48 @@ okErrErr
 ;
 ; If connection was closed it calls 'closed_callback'
 getPacket
-	call uartReadBlocking : call pushRing
-
-	ld hl, closed : call searchRing : jp c, closed_callback
-	ld hl, ipd : call searchRing : jp nc, getPacket
-
-	call count_ipd_length : ld (bytes_avail), hl
-    push hl : pop bc
-    
-    ld hl, output_buffer
-readp:
-	push bc : push hl
 	call uartReadBlocking
-	pop hl
-	ld (hl), a 
-	pop bc
+    cp   '+' : jr z, .checkIpdStart
+    cp   'O' : jr z, .checkClosed
+    jr   getPacket
 
-	dec bc : inc hl 
-    
-    ld a, b : or c : jr nz, readp
-	
-    ld hl, (bytes_avail)
-	ret
+.readPacket
+	call count_ipd_length
+    ld   (bytes_avail), hl
+    push hl
+    pop  bc                             ; BC = byte count
+
+    ld   hl, output_buffer
+.readByte
+	push bc
+    push hl
+	call uartReadBlocking
+	pop  hl
+	ld   (hl), a
+	pop  bc
+
+    inc  hl
+    dec  bc
+
+    ld   a, b
+    or   c
+    jr   nz, .readByte
+
+    ret
+
+.checkIpdStart
+    call uartReadBlocking : cp 'I' : jr nz, getPacket
+    call uartReadBlocking : cp 'P' : jr nz, getPacket
+    call uartReadBlocking : cp 'D' : jr nz, getPacket
+    call uartReadBlocking ; Comma
+    jr   .readPacket
+
+.checkClosed
+    call uartReadBlocking : cp 'S' : jr nz, getPacket
+    call uartReadBlocking : cp 'E' : jr nz, getPacket
+    call uartReadBlocking : cp 'D' : jr nz, getPacket
+    call uartReadBlocking : cp 13  : jr nz, getPacket
+    jp   closed_callback
 
 count_ipd_length
 	ld   hl, 0			; count length
@@ -105,37 +128,6 @@ count_ipd_length
 
     call atoi2
     jr   1B
-
-; HL - z-string to hostname or ip
-; DE - z-string to port
-startTcp:
-    push de
-    push hl
-    ld hl, cmd_open1 : call uartWriteStringZ
-    pop hl : call uartWriteStringZ 
-    ld hl, cmd_open2 : call uartWriteStringZ
-    pop de : call uartWriteStringZ 
-    ld hl, cmd_open3 : call okErrCmd
-    ret
-
-; Returns:
-;  A: 1 - Success
-;     0 - Failed
-sendByte:
-    push af 
-    ld hl, cmd_send_b : call okErrCmd
-    cp 1 : jr nz, sbErr
-sbLp
-    call uartReadBlocking 
-    ld hl, send_prompt : call searchRing : jr nc, sbLp
-    pop af
-
-    ld (sbyte_buff), a : call okErrCmd
-    ret
-sbErr:
-    pop af
-    ld a, 0 
-    ret
 
 loadWiFiConfig:
     IFDEF PLUS3DOS
@@ -170,15 +162,16 @@ cmd_open3   defb 13, 10, 0
 cmd_send    defb "AT+CIPSEND=", 0
 cmd_close   defb "AT+CIPCLOSE",13,10,0
 cmd_send_b  defb "AT+CIPSEND=1", 13, 10,0
-closed			defb 	"CLOSED", 13, 10, 0
+closed		defb "CLOSED", 13, 10, 0
 ipd			defb 13, 10, "+IPD,", 0
 
-response_rdy    defb 'ready', 0
-response_ok     defb 'OK', 13, 10, 0      ; Sucessful operation
-response_err    defb 13,10,'ERROR',13,10,0      ; Failed operation
-response_fail   defb 13,10,'FAIL',13,10,0       ; Failed connection to WiFi. For us same as ERROR
+response_rdy        defb 'ready', 0
+response_invalid    defb 'invalid', 0
+response_ok         defb 'OK', 13, 10, 0      ; Sucessful operation
+response_err        defb 13, 10, 'ERROR', 13, 10, 0      ; Failed operation
+response_fail       defb 13, 10, 'FAIL', 13, 10, 0       ; Failed connection to WiFi. For us same as ERROR
 
-log_err defb 13,'Failed connect to WiFi!',13, 0
+log_err defb 13, 'Failed connect to WiFi!', 13, 0
 log_ok  defb 13, 'WiFi connected!', 13, 0
 
 connectTo   db 13, 'Connecting to '
