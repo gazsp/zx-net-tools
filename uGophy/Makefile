@@ -34,6 +34,9 @@ plus3dos: *.asm font.bin
 prtwifi: *.asm font.bin
 	sjasmplus -DPLUS3DOS -DPRTWIFI main.asm
 
+zxnext: *.asm font.bin
+	sjasmplus -DESXDOS -DZXNEXT main.asm
+
 esxdos: *.asm font.bin
 	sjasmplus -DESXDOS -DAY main.asm
 
