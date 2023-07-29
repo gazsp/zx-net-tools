@@ -17,10 +17,10 @@
 Start: 
     di
     res 4, (iy+1)
+
     IFNDEF ZX48
 stack_pointer = #5aff
     call checkHighMem : jp nz, noMem
-    
     xor a : out (#fe), a : call changeBank
     ld de, #4000 : ld bc, eop - player : ld hl, player : ldir
     ELSE
@@ -28,6 +28,7 @@ stack_pointer = #5aff
     ds 128
 stack_pointer = $ - 1
     ENDIF
+
 zx48start:
     ld sp, stack_pointer
     xor a : ld (#5c6a), a  ; Thank you, Mario Prato, for feedback
@@ -93,6 +94,11 @@ wsLp  halt : djnz wsLp
     include "wifi.asm"
     include "prtwifi.asm"
     ENDIF
+
+    IFDEF ZXNEXT
+    include "wifi.asm"
+    include "nextuart.asm"
+    ENDIF
     
     IFDEF UNO
     include "uno-uart.asm"
@@ -115,12 +121,14 @@ port    db '70'
         db 0
 page_buffer equ $
     display "PAGE buffer:", $
+
     IFNDEF ZX48
 no128k  db 13, "You're in 48k mode!", 13, 13
         db     "Current version require full", 13 
         db     "128K memory access", 13, 13
         db     "System halted!", 0
     ENDIF
+
     IFNDEF ZX48
 player 
     DISPLAY "Player starts:" , $       
@@ -128,6 +136,7 @@ player
     DISPLAY "Player ends: ", $
     ENT
     ENDIF
+
 eop equ $
     SAVEBIN "ugoph.bin", Start, $ - Start
     SAVE3DOS "ugophp3.bin", Start, $ - Start

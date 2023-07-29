@@ -77,7 +77,6 @@ error:
     out (254), a
     ld hl, dos_error
     jp putStringZ
-    
 
 setDOS: 
     di

@@ -9,12 +9,19 @@ openPage:
 
     ex hl, de : ld de, hist : ld bc, 322 : ldir
 
+    xor  a
+    ld   hl, page_buffer
+    ld   (hl), a
+    ld   de, page_buffer + 1
+    ld   bc, #ffff - page_buffer - 1
+    ldir
+
     ld hl, (srv_ptr) : ld de, (path_ptr) : ld bc, (port_ptr)
     call makeRequest
+
     IFNDEF ZX48
     xor a : call changeBank
     ENDIF
-    ld hl, page_buffer : xor a : ld (hl), a :  ld de, page_buffer + 1 : ld bc, #ffff - page_buffer - 1 : ldir
 
     ld hl, page_buffer : call loadData
     
@@ -38,23 +45,21 @@ makeRequest:
     ENDIF
 
     IFDEF SPECTRANET
-    ; SPECTRANET PART GOING HERE!!!!!!!!!!!!!!!!!!!!!
     ld de, (port_ptr) : call atoi : ld b, h, c, l, hl, (srv_ptr) 
     call openTcp
     ld hl, (path_ptr), de, hl : call getStringLength : call sendTcp
     ld de, crlf, bc, 2 : call sendTcp
-    ELSE
-    ; WIFI PART GOING HERE!!!!!!!!!!!!!!
-; Open TCP connection
+    ELSE ; ENDIF SPECTRANET
+
+    ; Open TCP connection
     ld hl, cmd_open1 : call uartWriteStringZ
     ld hl, (srv_ptr) : call uartWriteStringZ
     ld hl, cmd_open2 : call uartWriteStringZ
     ld hl, (port_ptr) : call uartWriteStringZ
     ld hl, cmd_open3 : call okErrCmd
-
     cp 1 : jp nz, reqErr 
 
-; Send request
+    ; Send request
     ld hl, cmd_send : call uartWriteStringZ
     ld hl, (path_ptr)
     call getStringLength 
@@ -64,6 +69,7 @@ makeRequest:
     ld hl, crlf : call okErrCmd  
 
     cp 1 : jp nz, reqErr 
+
 wPrmt:
     call uartReadBlocking : call pushRing
     ld hl, send_prompt : call searchRing : jr nc, wPrmt
@@ -72,6 +78,7 @@ wPrmt:
     
     ld hl, crlf : call uartWriteStringZ : ld a, 1 : ld (connectionOpen), a
     ENDIF
+
     ret
 
 reqErr:  
